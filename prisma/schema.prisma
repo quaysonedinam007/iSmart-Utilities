@@ -1,0 +1,950 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model RefreshToken {
+  id            Int        @id @default(autoincrement())
+  token         String     @unique
+  expiresAt     DateTime
+  createdAt     DateTime   @default(now())
+  userId        String?    @db.Uuid
+  contactUserId String?    @db.Uuid
+  users         users?     @relation(fields: [contactUserId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_contactuser_user")
+  customers     customers? @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_refreshtoken_customer")
+
+  @@index([contactUserId], map: "idx_refreshtoken_contact_user_id")
+  @@index([userId], map: "idx_refreshtoken_user_id")
+}
+
+model account_security {
+  id             String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customer_id    String?    @unique(map: "unique_customer_security_id") @db.Uuid
+  pin            String?
+  two_fa_enabled Boolean?   @default(false)
+  two_fa_secret  String?
+  created_at     DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at     DateTime?  @default(now()) @db.Timestamp(6)
+  user_id        String?    @unique(map: "unique_user_security_id") @db.Uuid
+  customers      customers? @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_accountsecurity_customer")
+}
+
+model admins {
+  id                                                        String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  first_name                                                String
+  last_name                                                 String?
+  email                                                     String               @unique
+  password_hash                                             String
+  role_id                                                   String?              @db.Uuid
+  created_at                                                DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at                                                DateTime?            @default(now()) @db.Timestamp(6)
+  phone                                                     String?              @db.VarChar
+  roles                                                     roles?               @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kyc_documents                                             kyc_documents[]
+  ticket_assignments_ticket_assignments_assigned_byToadmins ticket_assignments[] @relation("ticket_assignments_assigned_byToadmins")
+  ticket_assignments_ticket_assignments_assigned_toToadmins ticket_assignments[] @relation("ticket_assignments_assigned_toToadmins")
+  ticket_comments                                           ticket_comments[]
+  tickets                                                   tickets[]
+}
+
+model api_credentials {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String    @db.Uuid
+  app_id     String    @unique @db.VarChar(64)
+  app_secret String    @db.VarChar(128)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model audits {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  actor_id    String?   @db.Uuid
+  business_id String?   @db.Uuid
+  action      String?   @db.VarChar(100)
+  payload     Json?
+  ip_address  String?
+  user_agent  String?
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model bulk_disbursements {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  batch_reference String       @unique @db.VarChar(64)
+  status          String       @default("PROCESSING") @db.VarChar(24)
+  total_count     Int          @default(0)
+  success_count   Int          @default(0)
+  failed_count    Int          @default(0)
+  created_at      DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime     @default(now()) @db.Timestamptz(6)
+  bulk_items      bulk_items[]
+}
+
+model bulk_items {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bulk_id            String             @db.Uuid
+  disbursement_id    String             @db.Uuid
+  bulk_disbursements bulk_disbursements @relation(fields: [bulk_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  disbursements      disbursements      @relation(fields: [disbursement_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_bulk_items_disbursement")
+}
+
+model business_bank_accounts {
+  id                         String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id                String?     @db.Uuid
+  account_type               String      @db.VarChar(20)
+  bank_name                  String?     @db.VarChar(255)
+  provider                   String?     @db.VarChar(100)
+  account_holder_name        String      @db.VarChar(255)
+  account_number             String?     @db.VarChar(100)
+  sort_code                  String?     @db.VarChar(100)
+  swift_bic                  String?     @db.VarChar(100)
+  account_currency           String?     @db.VarChar(10)
+  opened_date                DateTime?   @db.Date
+  verification_letter_s3_key String?
+  created_at                 DateTime?   @default(now()) @db.Timestamptz(6)
+  phone                      String?     @db.VarChar
+  account_category           String?     @db.VarChar
+  businesses                 businesses? @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([business_id, account_type], map: "business_id_account_type_unique")
+}
+
+model business_owners {
+  id                   String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id          String?     @db.Uuid
+  full_name            String      @db.VarChar(255)
+  place_of_birth       String?     @db.VarChar(255)
+  nationality          String?     @db.VarChar(255)
+  country_of_residence String?     @db.VarChar(255)
+  occupation           String?     @db.VarChar(100)
+  position             String?     @db.VarChar(100)
+  ownership_percentage Decimal?    @db.Decimal
+  id_type              String?     @db.VarChar(50)
+  id_number            String?     @db.VarChar(100)
+  id_issue_date        DateTime?   @db.Date
+  id_expiry_date       DateTime?   @db.Date
+  id_issuing_authority String?     @db.VarChar(255)
+  residential_address  String?
+  created_at           DateTime?   @default(now()) @db.Timestamptz(6)
+  dob                  String?     @db.VarChar
+  businesses           businesses? @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  documents            documents[]
+
+  @@index([business_id], map: "idx_business_owner_business_id")
+}
+
+model business_risk_documents {
+  id                     String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id            String     @db.Uuid
+  aml_lft_doc            String?
+  data_protection_doc    String?
+  business_plan_doc      String?
+  insurance_coverage_doc String?
+  pci_dss_doc            String?
+  created_at             DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at             DateTime?  @default(now()) @db.Timestamp(6)
+  businesses             businesses @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model businesses {
+  id                       String                    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  owner_id                 String?                   @db.Uuid
+  business_name            String
+  trading_name             String?
+  business_type            String                    @db.VarChar(50)
+  description              String?
+  industry                 String?                   @db.VarChar(100)
+  category                 String?                   @db.VarChar(100)
+  staff_size               String?                   @db.VarChar(50)
+  expected_monthly_revenue Decimal?                  @db.Decimal
+  registration_number      String?                   @db.VarChar(100)
+  tin_number               String?                   @db.VarChar(100)
+  date_of_incorporation    DateTime?                 @db.Date
+  registration_type        String?                   @db.VarChar(50)
+  registered_office        String?
+  operating_address        String?
+  gps_address              String?                   @db.VarChar(50)
+  business_email           String?
+  support_email            String?
+  disputes_email           String?
+  business_phone           String?
+  website_url              String?
+  social_profiles          Json?
+  kyc_status               String?                   @default("pending") @db.VarChar(100)
+  verification_tier        String?                   @default("starter") @db.VarChar(100)
+  created_at               DateTime?                 @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime?                 @default(now()) @db.Timestamptz(6)
+  country                  String?                   @db.VarChar
+  business_structure       String?                   @db.VarChar
+  business_bank_accounts   business_bank_accounts[]
+  business_owners          business_owners[]
+  business_risk_documents  business_risk_documents[]
+  users                    users?                    @relation(fields: [owner_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_business_user")
+  documents                documents[]
+  teams                    teams[]
+  transactions             transactions[]
+
+  @@index([owner_id], map: "idx_businesses_owner_id")
+}
+
+model charges {
+  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  transaction_id String    @db.Uuid
+  user_id        String    @db.Uuid
+  user_type      String    @db.VarChar(50)
+  amount         Decimal   @db.Decimal(12, 2)
+  status         String?   @default("PENDING") @db.VarChar(20)
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model custom_fees {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String    @db.Uuid
+  user_type  String?   @db.VarChar(50)
+  type       String    @db.VarChar(10)
+  rate       Decimal?  @db.Decimal(10, 2)
+  amount     Decimal?  @db.Decimal(12, 2)
+  fee_type   String    @db.VarChar(50)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  channel    String?   @db.VarChar
+}
+
+model customer_profiles {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customer_id     String    @unique(map: "unique_customer_id") @db.Uuid
+  country         String?   @db.VarChar(100)
+  city            String?   @db.VarChar(100)
+  area            String?   @db.VarChar(150)
+  digital_address String?   @db.VarChar(255)
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+  updated_at      DateTime? @default(now()) @db.Timestamp(6)
+  customers       customers @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_customerprofile_customer")
+}
+
+model customers {
+  id                    String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  first_name            String             @db.VarChar(100)
+  other_name            String?            @db.VarChar(100)
+  last_name             String             @db.VarChar(100)
+  phone                 String
+  email                 String?
+  password_hash         String?
+  phone_hmac            String?            @unique
+  is_email_verified     Boolean?           @default(false)
+  created_at            DateTime?          @default(now()) @db.Timestamp(6)
+  updated_at            DateTime?          @default(now()) @db.Timestamp(6)
+  customer_code         String?            @db.VarChar(255)
+  email_hmac            String?            @unique
+  is_phone_verified     Boolean?           @default(false)
+  status                String?            @default("active") @db.VarChar(255)
+  failed_login_attempts Int?               @default(0)
+  last_failed_login     String?            @db.VarChar(255)
+  current_token         String?
+  dob                   String?            @db.VarChar(255)
+  RefreshToken          RefreshToken[]
+  account_security      account_security?
+  customer_profiles     customer_profiles?
+  disbursements         disbursements[]
+  failed_email          failed_email[]
+  kyc_documents         kyc_documents[]
+  payment_methods       payment_methods[]
+  preferences           preferences?
+  transactions          transactions[]
+}
+
+model departments {
+  id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name        String  @unique
+  description String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model disbursement_issues {
+  id              String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  disbursement_id String        @db.Uuid
+  provider        String        @db.VarChar(50)
+  issue_type      String        @db.VarChar(50)
+  details         Json?
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  status          String        @db.VarChar(20)
+  owner           String?       @db.VarChar(100)
+  callback_id     String?       @db.Uuid
+  disbursements   disbursements @relation(fields: [disbursement_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model disbursements {
+  id                  String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  reference           String?               @unique @db.VarChar(255)
+  transaction_id      String?               @db.Uuid
+  channel             String                @db.VarChar(50)
+  amount              Decimal               @db.Decimal(19, 2)
+  currency            String                @db.VarChar(10)
+  status              String                @db.VarChar(50)
+  provider_id         String?               @db.Uuid
+  provider_ref        String?               @db.VarChar(255)
+  error_code          String?               @db.VarChar(100)
+  error_message       String?
+  narration           String?
+  created_at          DateTime?             @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?             @default(now()) @db.Timestamptz(6)
+  payment_details     String?
+  disburse_type       String?               @db.VarChar
+  customer_id         String?               @db.Uuid
+  user_type           String?               @default("customer") @db.VarChar
+  employee_id         String?               @db.Uuid
+  created_by          String?               @db.Uuid
+  business_id         String?               @db.Uuid
+  bulk_items          bulk_items[]
+  disbursement_issues disbursement_issues[]
+  employee            employee?             @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payment_providers   payment_providers?    @relation(fields: [provider_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_disbursement_provider")
+  customers           customers?            @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_disbursements_customer")
+  reconciliation_jobs reconciliation_jobs[]
+  refunds             refunds[]
+
+  @@index([provider_id], map: "idx_disbursement_provider")
+  @@index([status], map: "idx_disbursement_status")
+  @@index([transaction_id], map: "idx_disbursement_transaction_id")
+  @@index([customer_id], map: "idx_disbursement_customer_id")
+}
+
+model documents {
+  id              String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id     String?          @db.Uuid
+  owner_id        String?          @db.Uuid
+  doc_type        String
+  s3_key          String
+  filename        String?
+  file_mime       String?          @db.VarChar(100)
+  status          String?          @default("pending") @db.VarChar(50)
+  review_notes    String?
+  uploaded_by     String?          @db.Uuid
+  created_at      DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?        @default(now()) @db.Timestamptz(6)
+  businesses      businesses?      @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  business_owners business_owners? @relation(fields: [owner_id], references: [id], onUpdate: NoAction)
+  users           users?           @relation(fields: [uploaded_by], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_documents_user")
+
+  @@index([business_id], map: "idx_documents_business_id")
+}
+
+model email_message_table {
+  id             BigInt    @id @default(autoincrement())
+  messagedetails String?   @db.VarChar(255)
+  responsecode   String?   @db.VarChar(255)
+  identifier     String?   @db.VarChar(255)
+  time           DateTime? @db.Date
+}
+
+model employee {
+  id               String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  first_name       String             @db.VarChar(100)
+  last_name        String             @db.VarChar(100)
+  email            String             @unique @db.VarChar(150)
+  position         String?            @db.VarChar(100)
+  status           String?            @default("active") @db.VarChar(50)
+  phone            String?            @db.VarChar(20)
+  created_at       DateTime?          @default(now()) @db.Timestamp(6)
+  disbursements    disbursements[]
+  employee_payment employee_payment[]
+}
+
+model employee_payment {
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  employee_id            String                  @db.Uuid
+  amount                 Decimal                 @db.Decimal(15, 2)
+  payment_method         String?                 @db.VarChar(50)
+  reference              String?                 @unique @db.VarChar(100)
+  status                 String?                 @default("pending") @db.VarChar(50)
+  narration              String?
+  created_at             DateTime?               @default(now()) @db.Timestamp(6)
+  processed_at           DateTime?               @db.Timestamp(6)
+  created_by             String?                 @db.Uuid
+  provider_id            String?                 @db.Uuid
+  payment_details        Json?                   @db.Json
+  batch_id               String?                 @db.Uuid
+  currency               String?                 @db.VarChar
+  employee               employee                @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  employee_payment_batch employee_payment_batch? @relation(fields: [batch_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_employee_payment_batch")
+}
+
+model failed_email {
+  id          String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customer_id String?    @db.Uuid
+  type        String     @db.VarChar(50)
+  error       String?
+  attempts    Int?       @default(0)
+  created_at  DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at  DateTime?  @default(now()) @db.Timestamp(6)
+  user_id     String?    @db.Uuid
+  users       users?     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_failedemail_user")
+  customers   customers? @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_failedemail_customer")
+
+  @@index([customer_id], map: "idx_failedemail_customer_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model fees {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  type        String    @db.VarChar(10)
+  rate        Decimal?  @db.Decimal(10, 2)
+  amount      Decimal?  @db.Decimal(12, 2)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  name        String?   @db.VarChar
+  description String?   @db.VarChar
+  service_id  String?   @db.Uuid
+  status      String?   @db.VarChar
+  channel     String?   @db.VarChar
+  services    services? @relation(fields: [service_id], references: [id], map: "fk_fees_service")
+}
+
+model kyc_documents {
+  id                 String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customer_id        String?    @db.Uuid
+  document_type      String     @db.VarChar(50)
+  document_front_url String?
+  document_back_url  String?
+  selfie_url         String?
+  status             String?    @default("PENDING") @db.VarChar(20)
+  created_at         DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?  @default(now()) @db.Timestamp(6)
+  user_id            String?    @db.Uuid
+  application_id     String?    @db.VarChar
+  review_notes       String?
+  reviewed_by        String?    @db.Uuid
+  users              users?     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_kyc_documents_user")
+  admins             admins?    @relation(fields: [reviewed_by], references: [id], onUpdate: NoAction, map: "fk_kyc_documents_reviewed_by_admin")
+  customers          customers? @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_kycdocument_customer")
+
+  @@index([customer_id], map: "idx_kycdocuments_customer_id")
+}
+
+model logs {
+  request_id   String  @id @db.VarChar(255)
+  action       String? @db.VarChar(255)
+  log_level    String? @db.VarChar(255)
+  message      String? @db.VarChar(255)
+  server_ip    String? @db.VarChar(255)
+  service_name String? @db.VarChar(255)
+  stack_trace  String? @db.VarChar(255)
+  timestamp    String? @db.VarChar(255)
+  user_id      String? @db.VarChar(255)
+}
+
+model otps {
+  id        String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  otp       String?   @db.VarChar
+  userid    String?   @db.Uuid
+  expiresat DateTime? @default(now()) @db.Timestamp(6)
+  type      String?   @db.VarChar
+  is_used   Boolean?  @default(false)
+}
+
+model outbox_events {
+  id           BigInt    @id @default(autoincrement())
+  aggregate_id String    @db.Uuid
+  type         String
+  payload      String
+  headers      String
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  published_at DateTime? @db.Timestamptz(6)
+  failed_at    DateTime? @db.Timestamptz(6)
+  status       String?   @db.VarChar
+}
+
+model outbox_events_reconciler {
+  id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  aggregate_type String   @db.VarChar(50)
+  aggregate_id   String   @db.Uuid
+  type           String   @db.VarChar(50)
+  payload        Json
+  sent           Boolean  @default(false)
+  attempts       Int      @default(0)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model payment_methods {
+  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customer_id    String    @db.Uuid
+  type           String    @db.VarChar(50)
+  provider       String?   @db.VarChar(100)
+  account_number String    @db.VarChar(100)
+  account_name   String?   @db.VarChar(255)
+  is_primary     Boolean?  @default(false)
+  created_at     DateTime? @default(now()) @db.Timestamp(6)
+  updated_at     DateTime? @default(now()) @db.Timestamp(6)
+  customers      customers @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_paymentmethod_customer")
+
+  @@index([customer_id], map: "idx_paymentmethod_customer_id")
+}
+
+model payment_providers {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String           @db.VarChar(255)
+  channel        String           @db.VarChar(50)
+  active         Boolean?         @default(true)
+  config         Json?            @default("{}")
+  code           String?          @db.VarChar
+  disbursements  disbursements[]
+  provider_limit provider_limit[]
+}
+
+model permissions {
+  id               String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String             @unique
+  description      String?
+  role_permissions role_permissions[]
+}
+
+model preferences {
+  id                      String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customer_id             String?    @unique(map: "unique_customer_preference_id") @db.Uuid
+  currency                String?    @default("GHS") @db.VarChar(10)
+  language                String?    @default("en") @db.VarChar(10)
+  notification_preference String?    @default("EMAIL") @db.VarChar(50)
+  created_at              DateTime?  @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?  @default(now()) @db.Timestamp(6)
+  user_id                 String?    @db.Uuid
+  customers               customers? @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_preference_customer")
+
+  @@index([customer_id], map: "idx_preferences_customer_id")
+}
+
+model provider_limit {
+  id                String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  provider_id       String            @db.Uuid
+  amount_limit      Decimal           @db.Decimal(15, 2)
+  created_by        String?           @db.Uuid
+  created_at        DateTime?         @default(now()) @db.Timestamp(6)
+  payment_providers payment_providers @relation(fields: [provider_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model provider_messages {
+  id                  String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  provider            String    @db.VarChar(50)
+  provider_message_id String    @unique @db.VarChar(100)
+  received_at         DateTime  @default(now()) @db.Timestamptz(6)
+  payload             Json
+  verified            Boolean?  @default(false)
+  processed           Boolean?  @default(false)
+  processing_attempts Int       @default(0)
+  processing_error    String?
+  next_attempt_at     DateTime? @db.Timestamptz(6)
+}
+
+model provider_responses {
+  id                       String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  aggregate_type           String   @db.VarChar(50)
+  aggregate_id             String   @db.Uuid
+  provider                 String   @db.VarChar(50)
+  provider_conversation_id String?  @db.VarChar(100)
+  status                   String   @db.VarChar(20)
+  raw_response             Json
+  created_at               DateTime @default(now()) @db.Timestamptz(6)
+  mobile_platform_id       String?  @db.VarChar
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reconciliation_jobs {
+  id              String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  disbursement_id String        @db.Uuid
+  attempts        Int           @default(0)
+  next_run_at     DateTime?     @db.Timestamptz(6)
+  status          String        @db.VarChar(20)
+  last_error      String?
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+  disbursements   disbursements @relation(fields: [disbursement_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model refunds {
+  id                       String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  original_disbursement_id String        @db.Uuid
+  amount                   Decimal       @db.Decimal(19, 2)
+  currency                 String        @db.VarChar(10)
+  status                   String        @db.VarChar(50)
+  provider_id              String?       @db.Uuid
+  provider_ref             String?       @db.VarChar(255)
+  error_code               String?       @db.VarChar(100)
+  error_message            String?
+  narration                String?
+  created_at               DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime      @default(now()) @db.Timestamptz(6)
+  reference                String?       @db.VarChar
+  transaction_id           String?       @db.Uuid
+  disbursements            disbursements @relation(fields: [original_disbursement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model reports {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  created_by      String    @db.Uuid
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  report_type     String    @db.VarChar(100)
+  report_file_id  String?   @db.Uuid
+  period_start    DateTime? @db.Timestamp(6)
+  period_end      DateTime? @db.Timestamp(6)
+  generation_type String?   @db.VarChar
+}
+
+model role_permissions {
+  role_id       String      @db.Uuid
+  permission_id String      @db.Uuid
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  roles         roles       @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([role_id, permission_id])
+}
+
+model roles {
+  id               String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String             @unique
+  description      String?
+  admins           admins[]
+  role_permissions role_permissions[]
+}
+
+model services {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name        String?   @db.VarChar
+  description String?
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  fees        fees[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model settlement_account {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customer_id     String?   @db.Uuid
+  business_id     String?   @db.Uuid
+  user_type       String    @db.VarChar(50)
+  channel         String    @db.VarChar(20)
+  payment_details Json
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model settlement_mode {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  mode          String?  @db.VarChar(50)
+  user_id       String?  @unique(map: "unique_user_settlement_mode") @db.Uuid
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+  other_details String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model settlements {
+  id                      String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  settlement_mode         String    @db.VarChar(50)
+  total_amount            Decimal   @db.Decimal(18, 2)
+  channel_filter          String    @db.VarChar(50)
+  status                  String    @default("PENDING") @db.VarChar(20)
+  created_at              DateTime  @default(now()) @db.Timestamptz(6)
+  completed_at            DateTime? @db.Timestamptz(6)
+  user_id                 String?   @db.Uuid
+  user_type               String?   @db.VarChar
+  reference               String?   @db.VarChar
+  action_admin_id         String?   @db.Uuid
+  cancellation_reason     String?
+  settlement_request_type String?   @db.VarChar
+  transaction_ids         String[]  @db.Uuid
+  payment_channel         String?   @default("mobile_money") @db.VarChar(50)
+}
+
+model team_members {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  team_id    String    @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  user_id    String?   @db.Uuid
+  teams      teams     @relation(fields: [team_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_team")
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_team_member_user")
+
+  @@index([team_id], map: "idx_team_members_team_id")
+  @@index([user_id], map: "idx_team_members_user_id")
+}
+
+model teams {
+  id           String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  business_id  String         @db.Uuid
+  name         String         @db.VarChar(255)
+  menus        Json
+  created_by   String         @db.Uuid
+  created_at   DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime?      @default(now()) @db.Timestamptz(6)
+  description  String?
+  team_members team_members[]
+  businesses   businesses     @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_teams_business")
+
+  @@index([business_id], map: "idx_teams_business_id")
+}
+
+model ticket_assignments {
+  id                                            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  ticket_id                                     String    @db.Uuid
+  assigned_by                                   String    @db.Uuid
+  assigned_to                                   String    @db.Uuid
+  created_at                                    DateTime? @default(now()) @db.Timestamp(6)
+  admins_ticket_assignments_assigned_byToadmins admins    @relation("ticket_assignments_assigned_byToadmins", fields: [assigned_by], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_assigned_by")
+  admins_ticket_assignments_assigned_toToadmins admins    @relation("ticket_assignments_assigned_toToadmins", fields: [assigned_to], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_assigned_to")
+  tickets                                       tickets   @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ticket")
+}
+
+model ticket_comments {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  ticket_id    String?   @db.Uuid
+  commented_by String?   @db.Uuid
+  comment      String
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  admins       admins?   @relation(fields: [commented_by], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tickets      tickets?  @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model tickets {
+  id                 String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title              String
+  description        String?
+  status             String?              @default("open")
+  priority           String?              @default("medium")
+  created_by         String?              @db.Uuid
+  assigned_to        String?              @db.Uuid
+  created_at         DateTime?            @default(now()) @db.Timestamp(6)
+  updated_at         DateTime?            @default(now()) @db.Timestamp(6)
+  created_by_type    String?              @db.VarChar(20)
+  ticket_assignments ticket_assignments[]
+  ticket_comments    ticket_comments[]
+  admins             admins?              @relation(fields: [assigned_to], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model transactions {
+  id                    String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customer_id           String?     @db.Uuid
+  business_id           String?     @db.Uuid
+  transaction_type      String      @db.VarChar(50)
+  reference             String      @db.VarChar(100)
+  idempotency_key       String?     @unique @db.VarChar(100)
+  wallet_address        String      @db.VarChar(255)
+  amount                Decimal     @db.Decimal(18, 2)
+  currency              String?     @default("GHS") @db.VarChar(10)
+  channel               String?     @db.VarChar(50)
+  status                String?     @default("PENDING") @db.VarChar(20)
+  description           String?
+  balance_before        Decimal?    @db.Decimal(18, 2)
+  balance_after         Decimal?    @db.Decimal(18, 2)
+  initiated_by          String?     @db.Uuid
+  related_service_id    String?     @db.Uuid
+  created_at            DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?   @default(now()) @db.Timestamptz(6)
+  system_reference      String?     @db.VarChar(255)
+  user_type             String?     @default("CUSTOMER") @db.VarChar(255)
+  settlement_status     String?     @default("PENDING") @db.VarChar(20)
+  service_type          String?     @db.VarChar(255)
+  actual_amount_settled Decimal?    @db.Decimal
+  service_id            String?     @db.Uuid
+  businesses            businesses? @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_business")
+  customers             customers?  @relation(fields: [customer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_customer")
+
+  @@unique([reference, transaction_type], map: "transactions_reference_type_key")
+  @@index([business_id], map: "idx_transactions_business_id")
+  @@index([customer_id], map: "idx_transactions_customer_id")
+  @@index([status], map: "idx_transactions_status")
+}
+
+model user_activity {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id      String?   @db.VarChar(100)
+  service_name String    @db.VarChar(100)
+  method       String    @db.VarChar(10)
+  endpoint     String
+  status_code  Int?
+  duration_ms  Int?
+  ip_address   String?   @db.VarChar(50)
+  user_agent   String?
+  feature_name String?   @db.VarChar(100)
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  device_os    String?   @db.VarChar(50)
+  device_type  String?   @db.VarChar(20)
+  browser_name String?   @db.VarChar(50)
+}
+
+model users {
+  id                    String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  full_name             String          @db.VarChar(255)
+  email                 String          @unique
+  phone                 String?
+  password_hash         String
+  email_verified        Boolean?        @default(false)
+  phone_verified        Boolean?        @default(false)
+  created_at            DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?       @default(now()) @db.Timestamptz(6)
+  email_hmac            String?
+  phone_hmac            String?
+  dob                   String?         @db.VarChar
+  area                  String?         @db.VarChar
+  id_verified           Boolean?        @default(false)
+  residential_address   String?         @db.VarChar
+  status                String?         @default("active") @db.VarChar
+  last_failed_login     String?         @db.VarChar
+  failed_login_attempts Decimal?        @default(0) @db.Decimal
+  failed_attempts       Int?            @default(0)
+  last_failed_attempt   DateTime?       @db.Timestamp(6)
+  current_token         String?
+  usertype              String?         @db.VarChar
+  digital_address       String?         @db.VarChar
+  city                  String?         @db.VarChar
+  country               String?         @default("Ghana") @db.VarChar
+  birth_place           String?         @db.VarChar
+  RefreshToken          RefreshToken[]
+  businesses            businesses[]
+  documents             documents[]
+  failed_email          failed_email[]
+  kyc_documents         kyc_documents[]
+  team_members          team_members[]
+}
+
+model wallet {
+  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id        String    @db.Uuid
+  user_type      String    @db.VarChar(255)
+  wallet_address String    @unique @db.VarChar(255)
+  currency       String?   @default("GHS") @db.VarChar(255)
+  balance        Decimal?  @default(0.00) @db.Decimal(18, 2)
+  created_at     DateTime? @default(now()) @db.Timestamp(6)
+  updated_at     DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model utilities {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  amount          Decimal   @db.Decimal(18, 2)
+  user_id         String    @db.Uuid
+  user_type       String    @db.VarChar(50)
+  service_id      String    @db.Uuid
+  request_details Json
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+  status          String?   @default("PENDING") @db.VarChar(20)
+  reference       String    @unique @db.VarChar(100)
+  callback_url    String?
+  channel         String?   @db.VarChar
+}
+
+model employee_payment_batch {
+  id               String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  status           String?            @default("PENDING") @db.VarChar(50)
+  total_amount     Decimal            @db.Decimal(15, 2)
+  created_by       String?            @db.Uuid
+  created_at       DateTime?          @default(now()) @db.Timestamp(6)
+  batch_no         String?            @db.VarChar
+  employee_payment employee_payment[]
+}
+
+model products {
+  id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name        String? @db.VarChar
+  description String?
+  code        String? @db.VarChar
+  status      String? @default("active") @db.VarChar
+  file_key    String?
+  group_id    String? @db.VarChar
+}
+
+model sms_message_table {
+  id             BigInt    @id @default(autoincrement())
+  messagedetails String?   @db.VarChar(255)
+  responsecode   String?   @db.VarChar(255)
+  phone_number   String?   @db.VarChar(255)
+  time           DateTime? @db.Date
+}
+
+model in_app_message_table {
+  id             String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  messagedetails String?   @db.VarChar(255)
+  responsecode   String?   @db.VarChar(255)
+  user_id        String    @db.Uuid
+  is_read        Boolean?  @default(false)
+  time           DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model mtnpayment_gateway_request {
+  amount          Decimal   @db.Decimal(19, 2)
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+  currency        String    @db.VarChar(10)
+  customer_id     String?   @db.Uuid
+  id              String    @id @db.Uuid
+  provider_id     String    @db.Uuid
+  transaction_id  String?   @db.Uuid
+  channel         String    @db.VarChar(50)
+  status          String    @db.VarChar(50)
+  error_code      String?   @db.VarChar(100)
+  collection_type String?   @db.VarChar(255)
+  error_message   String?
+  narration       String?
+  payment_details String?
+  provider_ref    String?   @db.VarChar(255)
+  reference       String?   @db.VarChar(255)
+}
+
+model telecelpayment_gateway_request {
+  amount          Decimal   @db.Decimal(19, 2)
+  created_at      DateTime? @db.Timestamptz(6)
+  updated_at      DateTime? @db.Timestamptz(6)
+  currency        String    @db.VarChar(10)
+  customer_id     String?   @db.Uuid
+  id              String    @id @db.Uuid
+  provider_id     String    @db.Uuid
+  transaction_id  String?   @db.Uuid
+  channel         String    @db.VarChar(50)
+  status          String    @db.VarChar(50)
+  error_code      String?   @db.VarChar(100)
+  collection_type String?   @db.VarChar(255)
+  error_message   String?
+  narration       String?
+  payment_details String?
+  provider_ref    String?   @db.VarChar(255)
+  reference       String?   @db.VarChar(255)
+}
+
+model collection_table {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reference       String?   @db.VarChar(255)
+  network         String?   @db.VarChar(225)
+  transaction_id  String?   @db.Uuid
+  channel         String    @db.VarChar(50)
+  amount          Decimal   @db.Decimal(19, 2)
+  currency        String    @db.VarChar(10)
+  status          String    @db.VarChar(50)
+  provider_id     String    @db.Uuid
+  provider_ref    String?   @db.VarChar(255)
+  error_code      String?   @db.VarChar(100)
+  error_message   String?
+  narration       String?
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime? @default(now()) @db.Timestamptz(6)
+  payment_details String?
+  collection_type String?   @db.VarChar(255)
+  customer_id     String?   @db.Uuid
+  initiated_by    String?   @db.Uuid
+  recipient_id    String?   @db.Uuid
+}
+
+enum CompanyStatus {
+  incomplete
+  complete
+  blocked
+}
+
+enum UserRole {
+  PROJECT_OWNER
+  CONSTRUCTION_COMPANY
+  PROJECT_MANAGER
+  TEAM_MEMBER
+  ACCOUNTANT
+  ARCHITECT
+  CONTACT_PERSON
+}

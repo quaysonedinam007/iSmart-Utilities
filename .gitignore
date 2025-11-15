@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+app.log
+
+# PEM / key files
+*.pem
+
+# Misc
+.DS_Store

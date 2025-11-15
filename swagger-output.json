@@ -1,0 +1,1237 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "API for Utitlity Service",
+    "description": "API documentation for the Utility Service",
+    "version": "1.0.0"
+  },
+  "host": "localhost:3000",
+  "servers": [
+    {
+      "url": "http://18.116.165.182:5600/auth-service",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:6500",
+      "description": "Local development server"
+    }
+  ],
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/utilities/electricity": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "meterNumber": {
+                  "example": "any"
+                },
+                "meterType": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                },
+                "phoneNumber": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/water": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "accountNumber": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/data-bundle": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "phoneNumber": {
+                  "example": "any"
+                },
+                "bundleType": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                },
+                "providerCode": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/cable-tv": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "smartCardNumber": {
+                  "example": "any"
+                },
+                "packageType": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/airtime": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "phoneNumber": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                },
+                "providerCode": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/telecel/airtime": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "phoneNumber": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/mtn/airtime": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "phoneNumber": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/at/airtime": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "phoneNumber": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/providers": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "utility",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/providers/{providerId}/bundles": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "providerId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/electricity/query": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "phoneNumber",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerCode",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/data-bundle/query": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "phoneNumber",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerCode",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/broadband/query": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "phoneNumber",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerCode",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/broadband": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "phoneNumber": {
+                  "example": "any"
+                },
+                "bundleType": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                },
+                "providerCode": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/telecel/data/query": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "phoneNumber",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerCode",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/telecel/data": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "phoneNumber": {
+                  "example": "any"
+                },
+                "bundleType": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                },
+                "providerCode": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/telecel/broadband/query": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "landlineNumber",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerCode",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/telecel/broadband": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "landlineNumber": {
+                  "example": "any"
+                },
+                "broadbandNumber": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                },
+                "providerCode": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/at/data/query": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "phoneNumber",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerCode",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/at/data": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "phoneNumber": {
+                  "example": "any"
+                },
+                "bundleType": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                },
+                "providerCode": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/dstv/query": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "accountNumber",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerCode",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/dstv/pay": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "accountNumber": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                },
+                "providerCode": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/gotv/query": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "accountNumber",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerCode",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/gotv/pay": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "accountNumber": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                },
+                "providerCode": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/startimes/query": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "accountNumber",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "providerCode",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/startimes/pay": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "x-user-id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x-userid",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "x_user_id",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "customerId": {
+                  "example": "any"
+                },
+                "amount": {
+                  "example": "any"
+                },
+                "accountNumber": {
+                  "example": "any"
+                },
+                "providerId": {
+                  "example": "any"
+                },
+                "idempotencyKey": {
+                  "example": "any"
+                },
+                "providerCode": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/utilities/transactions/{posSalesId}/status": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "posSalesId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clientReference",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "hubtelTransactionId",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "networkTransactionId",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/utilities/hubtel/callback": {
+      "post": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "Reference": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}
