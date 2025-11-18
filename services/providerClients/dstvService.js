@@ -1,17 +1,17 @@
-const prisma = require("../config/db");
+const prisma = require("../../config/db.js");
 const { randomUUID } = require("crypto");
-const HubtelHandler = require("../utils/hubtelHandler");
+const HubtelHandler = require("../../utils/hubtelHandler");
 
 
 
-class ElectricityService {
-  static ELECTRICITY_SERVICE_ID = "e6d6bac062b5499cb1ece1ac3d742a84";
+class DstvService {
+  static DSTV_SERVICE_ID = "297a96656b5846ad8b00d5d41b256ea7";
 
   /**
    * payload = { Destination, Amount, ClientReference, CallbackUrl, Extradata }
    * headers = { x-user-id, service_id }
    */
-  static async buyElectricity(payload, headers) {
+  static async buyDstv(payload, headers) {
     const { ["x-user-id"]: customer_id, service_id } = headers;
 
     const { Destination, Amount, ClientReference, CallbackUrl, Extradata, ProductCode } =
@@ -55,7 +55,7 @@ class ElectricityService {
     }
 
     // 2️⃣ Generate reference + idempotency
-    const reference = ClientReference || `ELEC-${Date.now()}`;
+    const reference = ClientReference || `DSTV-${Date.now()}`;
     const idempotency = randomUUID();;
 
     // 3️⃣ Perform wallet deduction + create 2 records atomically
@@ -72,6 +72,7 @@ class ElectricityService {
           callback_url: CallbackUrl,
           channel: "WALLET",
           status: "PENDING",
+          product_code: ProductCode,
         },
       });
 
@@ -87,14 +88,15 @@ class ElectricityService {
           currency: "GHS",
           channel: "WALLET",
           status: "PENDING",
-          description: "Electricity purchase",
+          description: "DSTV subscription purchase",
           balance_before: balanceBefore,
           balance_after: balanceBefore - Amount,
           related_service_id: utility.id,
           service_id: service_id,
-          system_reference: `ELEE-${Date.now()}`,
+          system_reference: `CTD-${Date.now()}`,
           user_type: "CUSTOMER",
-          service_type: "electricity",
+          service_type: "cable tv subscription",
+          product_code: ProductCode,
         },
       });
 
@@ -113,13 +115,13 @@ class ElectricityService {
     const hubtel = new HubtelHandler();
 
     const hubtelResponse = await hubtel.sendCommissionRequest(
-      ElectricityService.ELECTRICITY_SERVICE_ID,
+      DstvService.DSTV_SERVICE_ID,
       payload
     );
 
     return {
       success: true,
-      message: "Electricity purchase initiated",
+      message: "DSTV subscription purchase initiated",
       data: {
         wallet: result.updatedWallet,
         utility: result.utility,
@@ -225,12 +227,12 @@ class ElectricityService {
             wallet_address: wallet.wallet_address,
             amount: amount,
             balance_before: wallet.balance,
-            service_type: "electricity",
+            service_type: "cable tv subscription",
             balance_after: newBalance,
             channel: "WALLET",
             related_service_id: utility.id,
             service_id: transaction.service_id,
-            description: `Refund for failed electricity purchase: ${description}`,
+            description: `Refund for failed DSTV subsccription purchase: ${description}`,
             status: "SUCCESS",
             created_at: new Date(),
             updated_at: new Date()
@@ -246,4 +248,4 @@ class ElectricityService {
   }
 }
 
-module.exports =  ElectricityService;
+module.exports =  DstvService;

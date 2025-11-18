@@ -96,7 +96,7 @@ class ATAirtimeService {
           balance_after: balanceBefore - Amount,
           related_service_id: utility.id,
           service_id: service_id,
-          system_reference: `SYS-${Date.now()}`,
+          system_reference: `AIRA-${Date.now()}`,
           user_type: "CUSTOMER",
           service_type: "airtime",
         },

@@ -16,14 +16,15 @@ class MtnAirtimeService {
     console.log("[MtnAirtimeService] payload:", payload);
     const { customer_id, service_id } = headers;
 
-    const { Destination, Amount, ClientReference, CallbackUrl } =
+    const { Destination, Amount, ClientReference, CallbackUrl, ProductCode } =
       payload;
 
     if (
       !Destination ||
       !Amount ||
       !ClientReference ||
-      !CallbackUrl
+      !CallbackUrl ||
+      !ProductCode
     ) {
       return {
         success: false,
@@ -96,7 +97,7 @@ class MtnAirtimeService {
           balance_after: balanceBefore - Amount,
           related_service_id: utility.id,
           service_id: service_id,
-          system_reference: `SYS-${Date.now()}`,
+          system_reference: `AIRM-${Date.now()}`,
           user_type: "CUSTOMER",
           service_type: "airtime",
         },
@@ -118,7 +119,10 @@ class MtnAirtimeService {
 
     const hubtelResponse = await hubtel.sendCommissionRequest(
       MtnAirtimeService.MTN_AIRTIME_SERVICE_ID,
-      payload
+      {
+        ...payload,
+        product_code: ProductCode,
+      }
     );
     const hubtelBody = hubtelResponse.data;
     const hubtelData = hubtelBody?. Data;

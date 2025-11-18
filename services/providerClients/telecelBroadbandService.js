@@ -1,20 +1,22 @@
-const prisma = require("../config/db");
+const prisma = require("../../config/db.js");
 const { randomUUID } = require("crypto");
-const HubtelHandler = require("../utils/hubtelHandler");
+const HubtelHandler = require("../../utils/hubtelHandler.js");
 
 
 
-class ElectricityService {
-  static ELECTRICITY_SERVICE_ID = "e6d6bac062b5499cb1ece1ac3d742a84";
+class TelecelBroadbandService {
+  static TELECEL_BROADBAND_SERVICE_ID = "b9a1aa246ba748f9ba01ca4cdbb3d1d3";
 
   /**
-   * payload = { Destination, Amount, ClientReference, CallbackUrl, Extradata }
+   * payload = { Destination, Amount, ClientReference, CallbackUrl, Extradata, ProductCode, Bundle}
    * headers = { x-user-id, service_id }
    */
-  static async buyElectricity(payload, headers) {
+  static async buyTelecelBroadband(payload, headers) {
+    console.log("[TelecelBroadbandService] headers:", headers);
+    console.log("[TelecelBroadbandService] payload:", payload);
     const { ["x-user-id"]: customer_id, service_id } = headers;
 
-    const { Destination, Amount, ClientReference, CallbackUrl, Extradata, ProductCode } =
+    const { Destination, Amount, ClientReference, CallbackUrl, Extradata, ProductCode, Bundle} =
       payload;
 
     if (
@@ -22,8 +24,9 @@ class ElectricityService {
       !Amount ||
       !ClientReference ||
       !CallbackUrl ||
-      !Extradata?.bundle ||
-      !ProductCode
+      !ProductCode ||
+      !Extradata ||
+      !Bundle
     ) {
       return {
         success: false,
@@ -36,17 +39,21 @@ class ElectricityService {
     const wallet = await prisma.wallet.findFirst({
       where: { user_id: customer_id},
     });
-
+    console.log("[TelecelBroadbandService] wallet found for user:", customer_id, "=>", wallet);
     if (!wallet) {
       return {
         success: false,
         status: 404,
         message: "Wallet not found",
       };
+      
     }
 
     const balanceBefore = wallet.balance;
+    console.log("[TelecelBroadbandService] balanceBefore:", balanceBefore);
+    console.log("[TelecelBroadbandService] Amount:", Amount);
     if (balanceBefore < Amount) {
+      console.log("[TelecelBroadbandService] Failing with Insufficient wallet balance");
       return {
         success: false,
         status: 400,
@@ -55,7 +62,7 @@ class ElectricityService {
     }
 
     // 2️⃣ Generate reference + idempotency
-    const reference = ClientReference || `ELEC-${Date.now()}`;
+    const reference = ClientReference || `AIRT-${Date.now()}`;
     const idempotency = randomUUID();;
 
     // 3️⃣ Perform wallet deduction + create 2 records atomically
@@ -72,6 +79,8 @@ class ElectricityService {
           callback_url: CallbackUrl,
           channel: "WALLET",
           status: "PENDING",
+          extradata: Extradata,
+          bundle: Bundle,
         },
       });
 
@@ -87,14 +96,14 @@ class ElectricityService {
           currency: "GHS",
           channel: "WALLET",
           status: "PENDING",
-          description: "Electricity purchase",
+          description: "Telecel Broadband purchase",
           balance_before: balanceBefore,
           balance_after: balanceBefore - Amount,
           related_service_id: utility.id,
           service_id: service_id,
-          system_reference: `ELEE-${Date.now()}`,
+          system_reference: `BRBT-${Date.now()}`,
           user_type: "CUSTOMER",
-          service_type: "electricity",
+          service_type: "broadband",
         },
       });
 
@@ -113,23 +122,31 @@ class ElectricityService {
     const hubtel = new HubtelHandler();
 
     const hubtelResponse = await hubtel.sendCommissionRequest(
-      ElectricityService.ELECTRICITY_SERVICE_ID,
-      payload
+      TelecelBroadbandService.TELECEL_BROADBAND_SERVICE_ID,
+      {
+        ...payload,
+        product_code: ProductCode,
+        bundle: Bundle,
+      }
     );
-
+    const hubtelBody = hubtelResponse.data;
+    const hubtelData = hubtelBody?.Data;
+    console.log("[TelecelBroadbandService] hubtelData:", hubtelData);
     return {
       success: true,
-      message: "Electricity purchase initiated",
+      message: "Telecel broadband purchase initiated",
       data: {
         wallet: result.updatedWallet,
         utility: result.utility,
         transaction: result.txn,
         hubtel: hubtelResponse,
+        broadbandData: hubtelData,
       },
     };
   }
 
   static async workOnCallback(callback) {
+    console.log("[TelecelBroadbandService] parsed callback:", callback);
     const {
       success,
       clientReference,
@@ -225,12 +242,12 @@ class ElectricityService {
             wallet_address: wallet.wallet_address,
             amount: amount,
             balance_before: wallet.balance,
-            service_type: "electricity",
+            service_type: "broadband",
             balance_after: newBalance,
             channel: "WALLET",
             related_service_id: utility.id,
             service_id: transaction.service_id,
-            description: `Refund for failed electricity purchase: ${description}`,
+            description: `Refund for failed broadband purchase: ${description}`,
             status: "SUCCESS",
             created_at: new Date(),
             updated_at: new Date()
@@ -246,4 +263,4 @@ class ElectricityService {
   }
 }
 
-module.exports =  ElectricityService;
+module.exports =  TelecelBroadbandService;

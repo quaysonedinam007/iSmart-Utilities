@@ -97,7 +97,7 @@ class WaterService {
           balance_after: balanceBefore - Amount,
           related_service_id: utility.id,
           service_id: service_id,
-          system_reference: `SYS-${Date.now()}`,
+          system_reference: `GHW-${Date.now()}`,
           user_type: "CUSTOMER",
           service_type: "water",
         },
