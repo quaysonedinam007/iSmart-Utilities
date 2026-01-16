@@ -14,7 +14,6 @@ const MtnDataController = require("../controllers/mtnDataController");
 const ATDataController = require("../controllers/atDataController");
 const TelecelDataController = require("../controllers/telecelDataController");
 
-
 // Buy ECG Electricity
 router.post("/buy-electricity", ElectricityController.buyElectricity);
 // Hubtel callback
@@ -44,6 +43,7 @@ router.get("/test-telecel-airtime", (req, res) => {
 
 //Buy MTN Airtime
 router.post("/buy-mtn-airtime", MtnAirtimeController.buyMtnAirtime);
+
 // Hubtel callback
 router.post("/buy-mtn-airtime/callback", MtnAirtimeController.handleCallback);
 

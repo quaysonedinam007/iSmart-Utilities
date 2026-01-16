@@ -1,6 +1,7 @@
 const prisma = require("../../config/db.js");
 const { randomUUID } = require("crypto");
 const HubtelHandler = require("../../utils/hubtelHandler");
+const { lookupRecordByRecipientId } = require("../../utils/recordLookup");
 
 
 
@@ -128,7 +129,7 @@ class StartimesService {
     };
   }
 
-  static async workOnCallback(callback) {
+  static async workOnCallback(callback, headers = {}) {
     const {
       success,
       clientReference,

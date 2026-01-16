@@ -1,6 +1,7 @@
 const prisma = require("../config/db");
 const { randomUUID } = require("crypto");
 const HubtelHandler = require("../utils/hubtelHandler");
+const { lookupRecordByHeader, lookupRecordByMultipleHeaders } = require("../utils/recordLookup");
 
 
 
@@ -32,7 +33,7 @@ class ElectricityService {
       };
     }
 
-    // 1️⃣ Get wallet
+    // Get wallet
     const wallet = await prisma.wallet.findFirst({
       where: { user_id: customer_id},
     });
@@ -129,7 +130,7 @@ class ElectricityService {
     };
   }
 
-  static async workOnCallback(callback) {
+  static async workOnCallback(callback, headers = {}) {
     const {
       success,
       clientReference,
@@ -142,6 +143,16 @@ class ElectricityService {
     } = callback;
 
     try {
+      // 🟦 0. LOOKUP PHASE: If recipientId header is provided, lookup the record
+      let lookupResult = null;
+      if (headers.recipientid) {
+        console.log("📋 Attempting record lookup using recipientId header");
+        lookupResult = await lookupRecordByRecipientId(headers);
+        if (lookupResult.success) {
+          console.log(`✅ Record found via recipientId lookup`);
+        }
+      }
+
       // 🟦 1. Find utility record by reference
       const utility = await prisma.utilities.findUnique({
         where: { reference: clientReference }
@@ -187,6 +198,33 @@ class ElectricityService {
             updated_at: new Date()
           }
         });
+
+        // 🟦 4a. LOOKUP ENRICHMENT: Enrich the success response with lookup data if available
+        let enrichmentData = {};
+        if (lookupResult?.success) {
+          enrichmentData = {
+            lookupData: {
+              type: lookupResult.lookupType,
+              wallet: lookupResult.wallet ? {
+                id: lookupResult.wallet.id,
+                balance: lookupResult.wallet.balance,
+                address: lookupResult.wallet.wallet_address
+              } : null,
+              customer: lookupResult.customer ? {
+                id: lookupResult.customer.id,
+                email: lookupResult.customer.email,
+                phoneNumber: lookupResult.customer.phone_number
+              } : null
+            }
+          };
+          console.log("💰 Transaction successful with enriched lookup data:", enrichmentData);
+        }
+
+        return {
+          success: true,
+          message: "Callback processed successfully - Purchase confirmed",
+          ...enrichmentData
+        };
       } else {
         // 🟦 5. If failed, mark transaction FAILED and credit user balance
         const wallet = await prisma.wallet.findFirst({
@@ -236,9 +274,14 @@ class ElectricityService {
             updated_at: new Date()
           }
         });
-      }
 
-      return { success: true, message: "Callback processed successfully" };
+        return { 
+          success: false, 
+          message: "Callback processed - Purchase failed, refund initiated",
+          walletRefunded: true,
+          newBalance: newBalance
+        };
+      }
     } catch (error) {
       console.error("Error processing callback:", error);
       return { success: false, status: 500, message: error.message };

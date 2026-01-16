@@ -34,7 +34,7 @@ class StartimesController {
       // Parse and shape the callback data
       const parsed = parseHubtelCallback(rawCallback);
 
-       const result = await StartimesService.workOnCallback(parsed);
+       const result = await StartimesService.workOnCallback(parsed, req.headers);
       
       if (!result.success) {
         return sendError(

@@ -1,6 +1,7 @@
 const prisma = require("../../config/db.js");
 const { randomUUID } = require("crypto");
 const HubtelHandler = require("../../utils/hubtelHandler.js");
+const { lookupRecordByRecipientId } = require("../../utils/recordLookup");
 
 
 
@@ -145,7 +146,7 @@ class TelecelBroadbandService {
     };
   }
 
-  static async workOnCallback(callback) {
+  static async workOnCallback(callback, headers = {}) {
     console.log("[TelecelBroadbandService] parsed callback:", callback);
     const {
       success,

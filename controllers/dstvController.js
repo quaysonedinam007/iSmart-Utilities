@@ -34,7 +34,7 @@ class DstvController {
       // Parse and shape the callback data
       const parsed = parseHubtelCallback(rawCallback);
 
-       const result = await DstvService.workOnCallback(parsed);
+       const result = await DstvService.workOnCallback(parsed, req.headers);
       
       if (!result.success) {
         return sendError(

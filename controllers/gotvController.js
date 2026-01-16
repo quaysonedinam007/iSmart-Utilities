@@ -34,7 +34,7 @@ class GotvController {
       // Parse and shape the callback data
       const parsed = parseHubtelCallback(rawCallback);
 
-       const result = await GotvService.workOnCallback(parsed);
+       const result = await GotvService.workOnCallback(parsed, req.headers);
       
       if (!result.success) {
         return sendError(

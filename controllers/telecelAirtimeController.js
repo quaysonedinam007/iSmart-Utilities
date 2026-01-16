@@ -36,7 +36,7 @@ class TelecelAirtimeController {
       // Parse and shape the callback data
       const parsed = parseHubtelCallback(rawCallback);
 
-       const result = await TelecelAirtimeService.workOnCallback(parsed);
+       const result = await TelecelAirtimeService.workOnCallback(parsed, req.headers);
       
       if (!result.success) {
         return sendError(

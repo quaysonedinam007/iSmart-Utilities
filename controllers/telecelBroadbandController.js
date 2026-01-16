@@ -36,7 +36,7 @@ class TelecelBroadbandController {
       // Parse and shape the callback data
       const parsed = parseHubtelCallback(rawCallback);
 
-       const result = await TelecelBroadbandService.workOnCallback(parsed);
+       const result = await TelecelBroadbandService.workOnCallback(parsed, req.headers);
       
       if (!result.success) {
         return sendError(

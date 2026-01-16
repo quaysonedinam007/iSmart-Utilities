@@ -62,7 +62,7 @@ class MtnDataController {
     try {
       const rawCallback = req.body;
       const parsed = parseHubtelCallback(rawCallback);
-      const result = await MtnDataService.handleCallback(parsed);
+      const result = await MtnDataService.handleCallback(parsed, req.headers);
 
       if (!result.success) {
         return sendError(

@@ -36,7 +36,7 @@ class MtnAirtimeController {
       // Parse and shape the callback data
       const parsed = parseHubtelCallback(rawCallback);
 
-       const result = await MtnAirtimeService.workOnCallback(parsed);
+       const result = await MtnAirtimeService.workOnCallback(parsed, req.headers);
       
       if (!result.success) {
         return sendError(

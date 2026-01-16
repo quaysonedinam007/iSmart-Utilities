@@ -7,7 +7,7 @@ class ElectricityController {
     try {
       const result = await ElectricityService.buyElectricity(req.body, req.headers);
 
-      if (!result.success) {
+      if(!result.success){
         return sendError(
           res,
           result.status || ResponseCodes.BAD_REQUEST,
@@ -34,7 +34,8 @@ class ElectricityController {
       // Parse and shape the callback data
       const parsed = parseHubtelCallback(rawCallback);
 
-       const result = await ElectricityService.workOnCallback(parsed);
+      // Pass headers along with the callback data so service can perform lookups
+       const result = await ElectricityService.workOnCallback(parsed, req.headers);
       
       if (!result.success) {
         return sendError(

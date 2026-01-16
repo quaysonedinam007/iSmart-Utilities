@@ -36,7 +36,7 @@ class ATAirtimeController {
       // Parse and shape the callback data
       const parsed = parseHubtelCallback(rawCallback);
 
-       const result = await ATAirtimeService.workOnCallback(parsed);
+       const result = await ATAirtimeService.workOnCallback(parsed, req.headers);
       
       if (!result.success) {
         return sendError(

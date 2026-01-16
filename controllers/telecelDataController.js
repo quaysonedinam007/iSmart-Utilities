@@ -62,7 +62,7 @@ class TelecelDataController {
     try {
       const rawCallback = req.body;
       const parsed = parseHubtelCallback(rawCallback);
-      const result = await TelecelDataService.handleCallback(parsed);
+      const result = await TelecelDataService.handleCallback(parsed, req.headers);
 
       if (!result.success) {
         return sendError(

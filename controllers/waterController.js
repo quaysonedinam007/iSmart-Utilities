@@ -36,7 +36,7 @@ class WaterController {
       // Parse and shape the callback data
       const parsed = parseHubtelCallback(rawCallback);
 
-       const result = await WaterService.workOnCallback(parsed);
+       const result = await WaterService.workOnCallback(parsed, req.headers);
       
       if (!result.success) {
         return sendError(

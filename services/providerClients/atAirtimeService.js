@@ -1,6 +1,7 @@
 const prisma = require("../../config/db.js");
 const { randomUUID } = require("crypto");
 const HubtelHandler = require("../../utils/hubtelHandler.js");
+const { lookupRecordByRecipientId } = require("../../utils/recordLookup");
 
 
 
@@ -136,7 +137,7 @@ class ATAirtimeService {
     };
   }
 
-  static async workOnCallback(callback) {
+  static async workOnCallback(callback, headers = {}) {
     console.log("[ATAirtimeService] parsed callback:", callback);
     const {
       success,
@@ -150,6 +151,12 @@ class ATAirtimeService {
     } = callback;
 
     try {
+      // 🟦 0. LOOKUP PHASE
+      let lookupResult = null;
+      if (headers.recipientid) {
+        lookupResult = await lookupRecordByRecipientId(headers);
+      }
+
       // 🟦 1. Find utility record by reference
       const utility = await prisma.utilities.findUnique({
         where: { reference: clientReference }
@@ -195,6 +202,29 @@ class ATAirtimeService {
             updated_at: new Date()
           }
         });
+        let enrichmentData = {};
+        if (lookupResult?.success) {
+          enrichmentData = {
+            lookupData: {
+              type: lookupResult.lookupType,
+              wallet: lookupResult.wallet ? {
+                id: lookupResult.wallet.id,
+                balance: lookupResult.wallet.balance,
+                address: lookupResult.wallet.wallet_address
+              } : null,
+              customer: lookupResult.customer ? {
+                id: lookupResult.customer.id,
+                email: lookupResult.customer.email,
+                phoneNumber: lookupResult.customer.phone_number
+              } : null
+            }
+          };
+        }
+        return {
+          success: true,
+          message: "Callback processed successfully - Purchase confirmed",
+          ...enrichmentData
+        };
       } else {
         // 🟦 5. If failed, mark transaction FAILED and credit user balance
         const wallet = await prisma.wallet.findFirst({
@@ -246,7 +276,12 @@ class ATAirtimeService {
         });
       }
 
-      return { success: true, message: "Callback processed successfully" };
+      return { 
+        success: false, 
+        message: "Callback processed - Purchase failed, refund initiated",
+        walletRefunded: true,
+        newBalance: newBalance
+      };
     } catch (error) {
       console.error("Error processing callback:", error);
       return { success: false, status: 500, message: error.message };

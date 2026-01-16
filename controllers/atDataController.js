@@ -62,7 +62,7 @@ class ATDataController {
     try {
       const rawCallback = req.body;
       const parsed = parseHubtelCallback(rawCallback);
-      const result = await ATDataService.handleCallback(parsed);
+      const result = await ATDataService.handleCallback(parsed, req.headers);
 
       if (!result.success) {
         return sendError(

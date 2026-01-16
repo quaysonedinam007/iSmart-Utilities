@@ -1,6 +1,7 @@
 const prisma = require("../../config/db");
 const { randomUUID } = require("crypto");
 const HubtelHandler = require("../../utils/hubtelHandler");
+const { lookupRecordByRecipientId } = require("../../utils/recordLookup");
 
 class TelecelDataService {
   static TELECEL_DATA_SERVICE_ID = "fa27127ba039455da04a2ac8a1613e00";
@@ -185,7 +186,7 @@ class TelecelDataService {
     }
   }
 
-  static async handleCallback(callback) {
+  static async handleCallback(callback, headers = {}) {
     const {
       success,
       clientReference,
@@ -200,6 +201,10 @@ class TelecelDataService {
     }
 
     try {
+      let lookupResult = null;
+      if (Object.keys(headers).length > 0) {
+        lookupResult = await lookupRecordByRecipientId(headers);
+      }
       const utility = await prisma.utilities.findUnique({ where: { reference: clientReference } });
       if (!utility) {
         return {
